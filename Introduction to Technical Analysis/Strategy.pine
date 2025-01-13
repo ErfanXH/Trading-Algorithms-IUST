@@ -1,0 +1,25 @@
+//@version=5
+strategy("Erfan's Strategy", overlay=true, initial_capital=1000)
+
+start = timestamp(2024, 7, 29, 0, 0)
+end = timestamp(2024, 10, 28, 23, 59)
+
+ma50 = ta.sma(close, 50)          // Longer-term 
+ma12 = ta.ema(close, 12)          // Short-term 
+ma26 = ta.ema(close, 26)          // Long-term 
+[macdLine, signalLine, _] = ta.macd(close, 12, 26, 9)
+rsi = ta.rsi(close, 14)
+
+longCondition = (ta.crossover(ma12, ma26) and close > ma50 and rsi > 50)
+shortCondition = (ta.crossunder(ma12, ma26) and close < ma50 and rsi < 50)
+
+if time >= start and time <= end
+    if longCondition
+        strategy.entry("Long", strategy.long, qty = strategy.equity / close)
+    if shortCondition
+        strategy.entry("Short", strategy.short, qty = strategy.equity / close)
+
+stopLoss = 0.03      
+takeProfit = 0.06    
+strategy.exit("TP/SL Long", from_entry="Long", limit=close * (1 + takeProfit), stop=close * (1 - stopLoss))
+strategy.exit("TP/SL Short", from_entry="Short", limit=close * (1 - takeProfit), stop=close * (1 + stopLoss))
